@@ -42,8 +42,10 @@ C<McBain::WithWebSocket> turns your L<McBain> API into a L<WebSocket|https://en.
 server using L<Net::WebSocket::Server>.
 
 The created server will be a JSON-in JSON-out service. When a client sends a message to
-the server, it is expected to be a JSON string, which will serve as the payload. The results
-of the API will be formatted into JSON as well and sent back to the client.
+the server, it is expected to be a JSON string, which will be converted into a hash-ref
+and serve as the payload for the API. The payload must have a C<path> key, which holds
+the complete path of the route/method to invoke (for example, C<GET:/math/sum>). The
+results from the API will be formatted into JSON as well and sent back to the client.
 
 Note that if an API method does not return a hash-ref, this runner module will automatically
 turn it into a hash-ref to ensure that conversion into JSON will be possible. The created
