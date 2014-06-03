@@ -27,7 +27,6 @@ McBain::WithWebSocket - Load a McBain API as a WebSocket server
 
 	BEGIN { $ENV{MCBAIN_WITH} = 'WithWebSocket'; }
 
-	use lib 'lib', 't/lib';
 	use warnings;
 	use strict;
 	use MyAPI;
