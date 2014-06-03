@@ -9,7 +9,7 @@ use Carp;
 use JSON;
 use Net::WebSocket::Server;
 
-our $VERSION = "1.000000";
+our $VERSION = "1.000001";
 $VERSION = eval $VERSION;
 
 my $json = JSON->new->convert_blessed;
@@ -51,7 +51,8 @@ Note that if an API method does not return a hash-ref, this runner module will a
 turn it into a hash-ref to ensure that conversion into JSON will be possible. The created
 hash-ref will have one key - holding the method's name, with whatever was returned from the
 method as its value. For example, if method C<GET:/divide> in topic C</math> returns an
-integer (say 7), then the client will get the JSON C<{ "GET:/math/divide": 7 }>.
+integer (say 7), then the client will get the JSON C<{ "GET:/math/divide": 7 }>. To avoid this
+behavior, make sure your API's methods return hash-refs.
 
 =head2 EXAMPLE CLIENT
 

@@ -36,7 +36,8 @@ DESCRIPTION
     one key - holding the method's name, with whatever was returned from the
     method as its value. For example, if method "GET:/divide" in topic
     "/math" returns an integer (say 7), then the client will get the JSON "{
-    "GET:/math/divide": 7 }".
+    "GET:/math/divide": 7 }". To avoid this behavior, make sure your API's
+    methods return hash-refs.
 
   EXAMPLE CLIENT
     I haven't succeeded in creating a Perl WebSocket client using any of the
