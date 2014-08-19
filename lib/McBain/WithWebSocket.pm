@@ -9,7 +9,7 @@ use Carp;
 use JSON;
 use Net::WebSocket::Server;
 
-our $VERSION = "1.000001";
+our $VERSION = "2.000000";
 $VERSION = eval $VERSION;
 
 my $json = JSON->new->convert_blessed;
@@ -25,11 +25,9 @@ McBain::WithWebSocket - Load a McBain API as a WebSocket server
 
 	#!/usr/bin/perl -w
 
-	BEGIN { $ENV{MCBAIN_WITH} = 'WithWebSocket'; }
-
 	use warnings;
 	use strict;
-	use MyAPI;
+	use MyAPI -withWebSocket;
 
 	MyAPI->start(80); # default port is 8080
 
@@ -166,9 +164,7 @@ sub handle_exception {
 
 =head1 CONFIGURATION AND ENVIRONMENT
    
-No configuration files are required. To tell L<McBain> to use this runner module,
-the C<MCBAIN_WITH> environment variable must be set to C<WithWebSocket>. See the
-L</"SYNOPSIS"> for an example.
+No configuration files are required.
  
 =head1 DEPENDENCIES
  

@@ -7,11 +7,9 @@ SYNOPSIS
 
             #!/usr/bin/perl -w
 
-            BEGIN { $ENV{MCBAIN_WITH} = 'WithWebSocket'; }
-
             use warnings;
             use strict;
-            use MyAPI;
+            use MyAPI -withWebSocket;
 
             MyAPI->start(80); # default port is 8080
 
@@ -77,9 +75,7 @@ METHODS REQUIRED BY MCBAIN
     Formats exceptions into JSON.
 
 CONFIGURATION AND ENVIRONMENT
-    No configuration files are required. To tell McBain to use this runner
-    module, the "MCBAIN_WITH" environment variable must be set to
-    "WithWebSocket". See the "SYNOPSIS" for an example.
+    No configuration files are required.
 
 DEPENDENCIES
     "McBain::WithWebSocket" depends on the following CPAN modules:
