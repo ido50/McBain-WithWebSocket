@@ -6,13 +6,14 @@ use warnings;
 use strict;
 
 use Carp;
-use JSON;
+use JSON::MaybeXS qw/JSON/;
 use Net::WebSocket::Server;
+use Try::Tiny;
 
-our $VERSION = "2.000000";
+our $VERSION = "3.000000";
 $VERSION = eval $VERSION;
 
-my $json = JSON->new->convert_blessed;
+my $json = JSON->new->allow_blessed->convert_blessed;
 
 =head1 NAME
  
@@ -69,97 +70,54 @@ The C<OPTIONS> method is special. It returns a hash-ref of methods supported by 
 route, including description and parameter definitions, if any. See L<McBain/"OPTIONS-REQUESTS">
 for more information.
 
-=head1 METHODS EXPORTED TO YOUR API
+=head1 METHODS
 
 =head2 start( [ $port ] )
 
 Starts the WebSocket server, listening on the supplied port. If C<$port> is not provided,
 C<8080> is used by default.
 
-=head1 METHODS REQUIRED BY MCBAIN
-
-=head2 init( $target )
-
-Creates and exports the L<start()|/"start( [ $port ] )"> method for your API's root package.
-
 =cut
 
-sub init {
-	my ($class, $target) = @_;
+sub new {
+	my ($class, $api) = @_;
 
-	if ($target->is_root) {
-		no strict 'refs';
-		*{"${target}::start"} = sub {
-			my ($pkg, $port) = @_;
+	bless { api => $api }, $class;
+}
 
-			Net::WebSocket::Server->new(
-				listen => $port || 8080,
-				on_connect => sub {
-					my ($serv, $conn) = @_;
+sub start {
+	my ($self, $port) = @_;
 
-					$conn->on(
-						utf8 => sub {
-							my ($conn, $payload) = @_;
+	Net::WebSocket::Server->new(
+		listen => $port || 8080,
+		on_connect => sub {
+			my ($serv, $conn) = @_;
 
-							$conn->send_utf8($pkg->call($payload));
-						}
-					);
+			$conn->on(
+				utf8 => sub {
+					my ($conn, $msg) = @_;
+
+					try {
+						my $payload = $json->decode($msg);
+
+						my $path = delete($payload->{path})
+							|| confess { code => 400, error => "Payload does not define path to invoke" };
+
+						my $res = $self->{api}->call($path, $payload, __PACKAGE__);
+						$res = { $path => $res }
+							unless ref $res eq 'HASH';
+
+						$conn->send_utf8($json->encode($res));
+					} catch {
+						$_ = { error => $_ }
+							unless ref $_;
+
+						$conn->send_utf8($json->encode($_));
+					};
 				}
-			)->start;
-		};
-	}
-}
-
-=head2 generate_env( $req )
-
-Receives the request JSON and creates C<McBain>'s standard env
-hash-ref from it.
-
-=cut
-
-sub generate_env {
-	my ($self, $payload) = @_;
-
-	$payload = $json->decode($payload);
-
-	confess { code => 400, error => "Namespace must match <METHOD>:<ROUTE> where METHOD is one of GET, POST, PUT, DELETE or OPTIONS" }
-		unless $payload->{path} =~ m/^(GET|POST|PUT|DELETE|OPTIONS):[^:]+$/;
-
-	my ($method, $route) = split(/:/, delete($payload->{path}));
-
-	return {
-		METHOD	=> $method,
-		ROUTE		=> $route,
-		PAYLOAD	=> $payload
-	};
-}
-
-=head2 generate_res( $env, $res )
-
-Converts the result from an API method in JSON. Read the discussion under
-L</"DESCRIPTION"> for more info.
-
-=cut
-
-sub generate_res {
-	my ($self, $env, $res) = @_;
-
-	$res = { $env->{METHOD}.':'.$env->{ROUTE} => $res }
-		unless ref $res eq 'HASH';
-
-	return $json->encode($res);
-}
-
-=head2 handle_exception( $err )
-
-Formats exceptions into JSON.
-
-=cut
-
-sub handle_exception {
-	my ($class, $err) = @_;
-
-	return $json->encode($err);
+			);
+		}
+	)->start;
 }
 
 =head1 CONFIGURATION AND ENVIRONMENT
@@ -174,9 +132,11 @@ C<McBain::WithWebSocket> depends on the following CPAN modules:
 
 =item * L<Carp>
 
-=item * L<JSON>
+=item * L<JSON::MaybeXS>
  
 =item * L<Net::WebSocket::Server>
+
+=item * L<Try::Tiny>
  
 =back
 
@@ -224,7 +184,7 @@ Ido Perlmuter <ido@ido50.net>
  
 =head1 LICENSE AND COPYRIGHT
  
-Copyright (c) 2014, Ido Perlmuter C<< ido@ido50.net >>.
+Copyright (c) 2014-2015, Ido Perlmuter C<< ido@ido50.net >>.
  
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself, either version
