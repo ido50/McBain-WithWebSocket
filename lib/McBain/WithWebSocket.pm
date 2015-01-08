@@ -28,12 +28,12 @@ McBain::WithWebSocket - Load a McBain API as a WebSocket server
 
 	use warnings;
 	use strict;
-	use MyAPI -withWebSocket;
+	use MyAPI;
+	use McBain::WithWebSocket;
 
-	MyAPI->start(80); # default port is 8080
-
-	# if your API is object oriented
-	MyAPI->new(%attrs)->start(80);
+	my $api = MyAPI->new;
+	my $server = McBain::WithWebSocket->new($api);
+	$server->start(80); # default port is 8080
 
 =head1 DESCRIPTION
 
